@@ -1,0 +1,2590 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Manajemen Aset</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideIn 0.4s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .input-focus {
+            transition: all 0.3s ease;
+        }
+        .input-focus:focus {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Mobile Navigation */
+        .mobile-nav {
+            display: none;
+        }
+        
+        /* Mobile Menu Toggle */
+        .mobile-menu-btn {
+            display: none;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .mobile-nav {
+                display: block;
+            }
+            .desktop-nav {
+                display: none;
+            }
+            .mobile-menu-btn {
+                display: block;
+            }
+            .card-hover:hover {
+                transform: none;
+            }
+            .input-focus:focus {
+                transform: none;
+            }
+            .toast {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                right: 10px;
+            }
+        }
+        
+        /* Mobile menu styles */
+        .mobile-menu {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .mobile-menu.active {
+            transform: translateX(0);
+        }
+        
+        /* Touch-friendly buttons */
+        @media (max-width: 768px) {
+            button, .nav-btn, .sub-nav-btn {
+                min-height: 44px;
+                padding: 12px 16px;
+            }
+            input, select, textarea {
+                min-height: 44px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+        
+        /* Improved table responsiveness */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Better spacing on mobile */
+        @media (max-width: 640px) {
+            .container-padding {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-full">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <div class="text-center">
+                <div class="mx-auto h-20 w-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg flex items-center justify-center mb-6">
+                    <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+                    </svg>
+                </div>
+                <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    Sistem Manajemen Aset Setwan
+                </h2>
+                <p class="mt-2 text-sm text-gray-600">
+                    Silakan masuk untuk mengakses sistem
+                </p>
+            </div>
+            
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/20">
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label for="username" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Username
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+                                </svg>
+                            </div>
+                            <input id="username" name="username" type="text" required 
+                                   class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-focus transition-all duration-300" 
+                                   placeholder="Masukkan username">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Password
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <input id="password" name="password" type="password" required 
+                                   class="w-full pl-10 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-focus transition-all duration-300" 
+                                   placeholder="Masukkan password">
+                            <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                <svg id="eyeIcon" class="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="loginError" class="hidden bg-red-50 border border-red-200 rounded-xl p-4">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-red-700 text-sm" id="loginErrorMessage"></span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                            <span class="flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Masuk ke Sistem
+                            </span>
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-6 bg-blue-50 rounded-xl p-4 border border-blue-200">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        <div class="text-sm">
+                            <p class="text-blue-800 font-medium mb-1">Akun Demo</p>
+                            <p class="text-blue-700">
+                                <strong>Administrator:</strong> admin / admin123<br>
+                                <strong>Pengelola:</strong> pengelola / pengelola123<br>
+                                <strong>User:</strong> user / user123
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="app" class="min-h-full hidden">
+        <!-- Header -->
+        <header class="glass-effect shadow-xl border-b border-white/20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 container-padding">
+                <div class="flex justify-between items-center py-4 lg:py-6">
+                    <div class="flex items-center">
+                        <!-- Mobile Menu Button -->
+                        <button onclick="toggleMobileMenu()" class="mobile-menu-btn mr-3 p-2 rounded-lg bg-white/20 text-gray-700 hover:bg-white/30 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
+                        
+                        <div class="gradient-bg text-white p-2 lg:p-3 rounded-xl mr-2 lg:mr-4 shadow-lg">
+                            <svg class="w-6 h-6 lg:w-8 lg:h-8" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Manajemen Aset</h1>
+                            <p class="text-xs lg:text-sm text-gray-600 mt-1 hidden sm:block">Sistem Informasi Pengelolaan Aset</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 lg:space-x-4">
+                        <div class="text-xs lg:text-sm text-gray-600 bg-white/50 px-2 lg:px-3 py-1 lg:py-2 rounded-lg backdrop-blur-sm hidden md:block">
+                            <span id="currentTime"></span>
+                        </div>
+                        <div class="flex items-center space-x-2 lg:space-x-3">
+                            <div class="text-xs lg:text-sm text-gray-600 bg-white/50 px-2 lg:px-3 py-1 lg:py-2 rounded-lg backdrop-blur-sm hidden md:block">
+                                <span id="userRole"></span>
+                            </div>
+                            <button id="backupBtn" onclick="backupData()" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-3 lg:px-6 py-2 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                                <span class="hidden sm:inline">Backup</span>
+                                <span class="sm:hidden">Backup</span>
+                            </button>
+                            <button id="restoreBtn" onclick="restoreData()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-3 lg:px-6 py-2 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                                <span class="hidden sm:inline">Restore</span>
+                                <span class="sm:hidden">Restore</span>
+                            </button>
+                            <button onclick="logout()" class="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-3 lg:px-6 py-2 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                                <span class="hidden sm:inline">Logout</span>
+                                <span class="sm:hidden">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Desktop Navigation -->
+        <nav class="desktop-nav bg-white shadow-lg border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 container-padding">
+                <div class="flex space-x-2 lg:space-x-4 overflow-x-auto py-4" id="desktopNavigation">
+                    <button onclick="showMenu('dashboard')" class="nav-btn bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 whitespace-nowrap">
+                        Menu Utama
+                    </button>
+                    <button id="navDataAset" onclick="showMenu('entri-data')" class="nav-btn bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 whitespace-nowrap">
+                        Data Aset
+                    </button>
+                    <button onclick="showMenu('rekap')" class="nav-btn bg-white text-gray-700 border-2 border-gray-200 hover:border-green-300 hover:bg-green-50 px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 whitespace-nowrap">
+                        Rekap Aset
+                    </button>
+                    <button onclick="showMenu('laporan')" class="nav-btn bg-white text-gray-700 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50 px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 whitespace-nowrap">
+                        Laporan
+                    </button>
+                    <button id="navKondisi" onclick="showMenu('kondisi')" class="nav-btn bg-white text-gray-700 border-2 border-gray-200 hover:border-orange-300 hover:bg-orange-50 px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 whitespace-nowrap">
+                        Kondisi Aset
+                    </button>
+                    <button onclick="showMenu('tracking')" class="nav-btn bg-white text-gray-700 border-2 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 whitespace-nowrap">
+                        Tracking Barang
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Navigation Sidebar -->
+        <div id="mobileMenu" class="mobile-nav fixed inset-0 z-50 hidden">
+            <div class="fixed inset-0 bg-black bg-opacity-50" onclick="toggleMobileMenu()"></div>
+            <div class="mobile-menu fixed left-0 top-0 h-full w-80 max-w-sm bg-white shadow-xl">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h2 class="text-lg font-semibold text-gray-900">Menu Navigasi</h2>
+                    <button onclick="toggleMobileMenu()" class="p-2 rounded-lg hover:bg-gray-100">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-4 space-y-3" id="mobileNavigation">
+                    <button onclick="showMenu('dashboard'); toggleMobileMenu();" class="mobile-nav-btn w-full text-left px-6 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-lg">
+                        Menu Utama
+                    </button>
+                    <button id="mobileNavDataAset" onclick="showMenu('entri-data'); toggleMobileMenu();" class="mobile-nav-btn w-full text-left px-6 py-4 rounded-xl bg-white border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-700 font-semibold transition-all duration-300">
+                        Data Aset
+                    </button>
+                    <button onclick="showMenu('rekap'); toggleMobileMenu();" class="mobile-nav-btn w-full text-left px-6 py-4 rounded-xl bg-white border-2 border-gray-200 hover:border-green-300 hover:bg-green-50 text-gray-700 font-semibold transition-all duration-300">
+                        Rekap Aset
+                    </button>
+                    <button onclick="showMenu('laporan'); toggleMobileMenu();" class="mobile-nav-btn w-full text-left px-6 py-4 rounded-xl bg-white border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50 text-gray-700 font-semibold transition-all duration-300">
+                        Laporan
+                    </button>
+                    <button id="mobileNavKondisi" onclick="showMenu('kondisi'); toggleMobileMenu();" class="mobile-nav-btn w-full text-left px-6 py-4 rounded-xl bg-white border-2 border-gray-200 hover:border-orange-300 hover:bg-orange-50 text-gray-700 font-semibold transition-all duration-300">
+                        Kondisi Aset
+                    </button>
+                    <button onclick="showMenu('tracking'); toggleMobileMenu();" class="mobile-nav-btn w-full text-left px-6 py-4 rounded-xl bg-white border-2 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 text-gray-700 font-semibold transition-all duration-300">
+                        Tracking Barang
+                    </button>
+                </div>
+                <div class="absolute bottom-4 left-4 right-4">
+                    <div class="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
+                        <span id="currentTimeMobile"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto py-4 lg:py-6 px-4 sm:px-6 lg:px-8 container-padding">
+            <!-- Dashboard -->
+            <div id="dashboard" class="menu-content fade-in">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4 lg:p-6 border border-white/20 card-hover">
+                        <div class="flex items-center">
+                            <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-3 lg:p-4 rounded-2xl shadow-lg">
+                                <svg class="w-6 h-6 lg:w-8 lg:h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3 lg:ml-4">
+                                <p class="text-xs lg:text-sm font-medium text-gray-600">Total Aset</p>
+                                <p class="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent" id="totalAset">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4 lg:p-6 border border-white/20 card-hover">
+                        <div class="flex items-center">
+                            <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-3 lg:p-4 rounded-2xl shadow-lg">
+                                <svg class="w-6 h-6 lg:w-8 lg:h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3 lg:ml-4">
+                                <p class="text-xs lg:text-sm font-medium text-gray-600">Aset Baik</p>
+                                <p class="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-800 bg-clip-text text-transparent" id="asetBaik">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4 lg:p-6 border border-white/20 card-hover">
+                        <div class="flex items-center">
+                            <div class="bg-gradient-to-br from-yellow-500 to-orange-500 p-3 lg:p-4 rounded-2xl shadow-lg">
+                                <svg class="w-6 h-6 lg:w-8 lg:h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92z"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3 lg:ml-4">
+                                <p class="text-xs lg:text-sm font-medium text-gray-600">Perlu Perbaikan</p>
+                                <p class="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-800 bg-clip-text text-transparent" id="asetRusak">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4 lg:p-6 border border-white/20 card-hover">
+                        <div class="flex items-center">
+                            <div class="bg-gradient-to-br from-purple-500 to-indigo-600 p-3 lg:p-4 rounded-2xl shadow-lg">
+                                <svg class="w-6 h-6 lg:w-8 lg:h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3 lg:ml-4">
+                                <p class="text-xs lg:text-sm font-medium text-gray-600">Total Pengguna</p>
+                                <p class="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-800 bg-clip-text text-transparent" id="totalPengguna">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4 lg:p-6 border border-white/20">
+                    <h2 class="text-lg lg:text-xl font-bold text-gray-900 mb-3 lg:mb-4">Selamat Datang di Sistem Manajemen Aset Setwan</h2>
+                    <p class="text-sm lg:text-base text-gray-600 mb-3 lg:mb-4">Sistem ini membantu Anda mengelola aset organisasi dengan fitur lengkap termasuk pencatatan, pemantauan kondisi, dan pelaporan yang terintegrasi dengan sinkronisasi real-time</p>
+                    <ul class="list-disc list-inside text-sm lg:text-base text-gray-600 space-y-1 lg:space-y-2">
+                        <li>Pencatatan data aset secara detail</li>
+                        <li>Manajemen pengguna aset</li>
+                        <li>Pemantauan kondisi aset</li>
+                        <li>Laporan dan rekap data</li>
+                        <li>Backup dan restore data</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Entri Data -->
+            <div id="entri-data" class="menu-content hidden">
+                <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4 lg:p-8 mb-6 lg:mb-8 border border-white/20">
+                    <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mb-6 lg:mb-8">
+                        <button onclick="showSubMenu('data-aset')" class="sub-nav-btn bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 lg:px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                            Entri Data Aset
+                        </button>
+                        <button onclick="showSubMenu('pengguna-aset')" class="sub-nav-btn bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 px-6 lg:px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105">
+                            Pengguna Aset
+                        </button>
+                    </div>
+
+                    <!-- Data Aset Form -->
+                    <div id="data-aset" class="sub-menu">
+                        <div class="text-center mb-8">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg mb-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6.5a1.5 1.5 0 01-1.5 1.5h-7A1.5 1.5 0 014 11.5V5zM7.5 6.5a1 1 0 00-1 1v1a1 1 0 001 1h5a1 1 0 001-1v-1a1 1 0 00-1-1h-5z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">Form Entri Data Aset</h3>
+                            <p class="text-gray-600 max-w-2xl mx-auto">Lengkapi informasi aset dengan detail untuk memudahkan pengelolaan dan tracking di masa mendatang</p>
+                        </div>
+
+                        <form id="asetForm" class="space-y-8">
+                            <!-- Section 1: Informasi Dasar -->
+                            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 shadow-sm">
+                                <div class="flex items-center mb-6">
+                                    <div class="bg-blue-500 p-2 rounded-lg mr-3">
+                                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-900">Informasi Dasar Aset</h4>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="relative">
+                                        <label for="jenisBarang" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-green-100 text-green-600 text-xs px-2 py-1 rounded-full mr-2">JB</span>
+                                            Jenis Barang <span class="text-red-500 ml-1">*</span>
+                                        </label>
+                                        <input type="text" id="jenisBarang" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-focus transition-all duration-300" placeholder="Contoh: Laptop, Meja Kerja, Kendaraan" required>
+                                    </div>
+                                    <div class="relative">
+                                        <label for="kodeBarang" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-purple-100 text-purple-600 text-xs px-2 py-1 rounded-full mr-2">KB</span>
+                                            Kode Barang <span class="text-red-500 ml-1">*</span>
+                                        </label>
+                                        <input type="text" id="kodeBarang" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-focus font-mono uppercase" placeholder="Contoh: AST-001-2024" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section 2: Dokumen & Administrasi -->
+                            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100 shadow-sm">
+                                <div class="flex items-center mb-6">
+                                    <div class="bg-green-500 p-2 rounded-lg mr-3">
+                                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-900">Dokumen & Administrasi</h4>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    <div class="relative">
+                                        <label for="bast" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-yellow-100 text-yellow-600 text-xs px-2 py-1 rounded-full mr-2">BST</span>
+                                            BAST
+                                        </label>
+                                        <input type="text" id="bast" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 input-focus" placeholder="Nomor BAST">
+                                    </div>
+                                    <div class="relative">
+                                        <label for="tanggalBast" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-yellow-100 text-yellow-600 text-xs px-2 py-1 rounded-full mr-2">TGL</span>
+                                            Tanggal BAST
+                                        </label>
+                                        <input type="date" id="tanggalBast" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 input-focus">
+                                    </div>
+                                    <div class="relative">
+                                        <label for="sp2d" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-orange-100 text-orange-600 text-xs px-2 py-1 rounded-full mr-2">SP2D</span>
+                                            SP2D
+                                        </label>
+                                        <input type="text" id="sp2d" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 input-focus" placeholder="Nomor SP2D">
+                                    </div>
+                                    <div class="relative">
+                                        <label for="tanggalSp2d" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-orange-100 text-orange-600 text-xs px-2 py-1 rounded-full mr-2">TGL</span>
+                                            Tanggal SP2D
+                                        </label>
+                                        <input type="date" id="tanggalSp2d" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 input-focus">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section 3: Spesifikasi Teknis -->
+                            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100 shadow-sm">
+                                <div class="flex items-center mb-6">
+                                    <div class="bg-purple-500 p-2 rounded-lg mr-3">
+                                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-900">Spesifikasi Teknis</h4>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div class="relative">
+                                        <label for="merkType" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full mr-2">MRK</span>
+                                            Merk/Type
+                                        </label>
+                                        <input type="text" id="merkType" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 input-focus" placeholder="Contoh: Dell Inspiron 15">
+                                    </div>
+                                    <div class="relative">
+                                        <label for="ukuranCc" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-indigo-100 text-indigo-600 text-xs px-2 py-1 rounded-full mr-2">UKR</span>
+                                            Ukuran/CC
+                                        </label>
+                                        <input type="text" id="ukuranCc" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 input-focus" placeholder="Contoh: 15 inch, 1500cc">
+                                    </div>
+                                    <div class="relative">
+                                        <label for="bahan" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-green-100 text-green-600 text-xs px-2 py-1 rounded-full mr-2">BHN</span>
+                                            Bahan
+                                        </label>
+                                        <input type="text" id="bahan" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 input-focus" placeholder="Contoh: Kayu Jati, Plastik, Metal">
+                                    </div>
+                                    <div class="relative">
+                                        <label for="tahunPembelian" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-yellow-100 text-yellow-600 text-xs px-2 py-1 rounded-full mr-2">THN</span>
+                                            Tahun Pembelian
+                                        </label>
+                                        <input type="number" id="tahunPembelian" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 input-focus text-center font-semibold" min="1900" max="2099" placeholder="2024">
+                                    </div>
+                                    <div class="relative">
+                                        <label for="namaPabrik" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full mr-2">PBK</span>
+                                            Nama Pabrik
+                                        </label>
+                                        <input type="text" id="namaPabrik" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 input-focus" placeholder="Contoh: PT. Astra Honda Motor">
+                                    </div>
+                                    <div class="relative">
+                                        <label for="sumberPerolehan" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-teal-100 text-teal-600 text-xs px-2 py-1 rounded-full mr-2">SMB</span>
+                                            Sumber Perolehan
+                                        </label>
+                                        <select id="sumberPerolehan" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 input-focus bg-white">
+                                            <option value="">Pilih Sumber Perolehan</option>
+                                            <option value="APBN">APBN</option>
+                                            <option value="APBD">APBD</option>
+                                            <option value="Hibah">Hibah</option>
+                                            <option value="Swadaya">Swadaya</option>
+                                            <option value="Bantuan">Bantuan</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section 4: Identifikasi Kendaraan (Opsional) -->
+                            <div class="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-100 shadow-sm">
+                                <div class="flex items-center mb-6">
+                                    <div class="bg-orange-500 p-2 rounded-lg mr-3">
+                                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
+                                            <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1V8a1 1 0 00-.293-.707L15 4.586A1 1 0 0014.414 4H14v3z"/>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-900">Identifikasi Kendaraan <span class="text-sm text-gray-500 font-normal">(Khusus untuk kendaraan)</span></h4>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    <div class="relative">
+                                        <label for="nomorRangka" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full mr-2">RNG</span>
+                                            Nomor Rangka
+                                        </label>
+                                        <input type="text" id="nomorRangka" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 input-focus font-mono" placeholder="Contoh: MHKA1234567890123">
+                                    </div>
+                                    <div class="relative">
+                                        <label for="nomorMesin" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full mr-2">MSN</span>
+                                            Nomor Mesin
+                                        </label>
+                                        <input type="text" id="nomorMesin" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 input-focus font-mono" placeholder="Contoh: K15B1234567">
+                                    </div>
+                                    <div class="relative">
+                                        <label for="nomorPolisi" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full mr-2">POL</span>
+                                            Nomor Polisi
+                                        </label>
+                                        <input type="text" id="nomorPolisi" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 input-focus font-mono uppercase text-center" placeholder="Contoh: B 1234 ABC">
+                                    </div>
+                                    <div class="relative">
+                                        <label for="nomorBpkb" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-green-100 text-green-600 text-xs px-2 py-1 rounded-full mr-2">BPKB</span>
+                                            Nomor BPKB
+                                        </label>
+                                        <input type="text" id="nomorBpkb" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 input-focus font-mono" placeholder="Nomor BPKB">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section 5: Informasi Finansial -->
+                            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-100 shadow-sm">
+                                <div class="flex items-center mb-6">
+                                    <div class="bg-emerald-500 p-2 rounded-lg mr-3">
+                                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-900">Informasi Finansial</h4>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    <div class="relative">
+                                        <label for="jumlah" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full mr-2">JML</span>
+                                            Jumlah <span class="text-red-500 ml-1">*</span>
+                                        </label>
+                                        <input type="number" id="jumlah" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 input-focus text-center text-lg font-bold" min="1" placeholder="1" required>
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none mt-8">
+                                            <span class="text-gray-400 text-sm">unit</span>
+                                        </div>
+                                    </div>
+                                    <div class="relative">
+                                        <label for="biayaUmum" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-yellow-100 text-yellow-600 text-xs px-2 py-1 rounded-full mr-2">BYU</span>
+                                            Biaya Umum
+                                        </label>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">Rp</span>
+                                            <input type="number" id="biayaUmum" class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 input-focus" min="0" placeholder="0">
+                                        </div>
+                                    </div>
+                                    <div class="relative">
+                                        <label for="hargaSatuan" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-green-100 text-green-600 text-xs px-2 py-1 rounded-full mr-2">HRG</span>
+                                            Harga Satuan <span class="text-red-500 ml-1">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">Rp</span>
+                                            <input type="number" id="hargaSatuan" class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 input-focus" min="0" placeholder="0" required>
+                                        </div>
+                                    </div>
+                                    <div class="relative">
+                                        <label for="totalHarga" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-purple-100 text-purple-600 text-xs px-2 py-1 rounded-full mr-2">TOT</span>
+                                            Total Harga
+                                        </label>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">Rp</span>
+                                            <input type="number" id="totalHarga" class="w-full pl-10 pr-4 py-3 border-2 border-emerald-300 rounded-xl bg-emerald-50 font-bold text-emerald-700 text-lg" readonly>
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                                <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section 6: Keterangan Tambahan -->
+                            <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-2xl p-6 border border-gray-200 shadow-sm">
+                                <div class="flex items-center mb-6">
+                                    <div class="bg-gray-500 p-2 rounded-lg mr-3">
+                                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-900">Keterangan Tambahan</h4>
+                                </div>
+                                <div class="relative">
+                                    <label for="keterangan" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                        <span class="bg-indigo-100 text-indigo-600 text-xs px-2 py-1 rounded-full mr-2">KET</span>
+                                        Catatan & Keterangan
+                                    </label>
+                                    <textarea id="keterangan" rows="4" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500 input-focus resize-none" placeholder="Tambahkan catatan khusus, kondisi awal, atau informasi penting lainnya tentang aset ini..."></textarea>
+                                    <div class="absolute bottom-3 right-3 text-xs text-gray-400">
+                                        <span id="charCount">0</span>/500 karakter
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="text-center pt-6">
+                                <button type="submit" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-12 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                                    <span class="flex items-center justify-center">
+                                        <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z"/>
+                                        </svg>
+                                        Simpan Data Aset
+                                    </span>
+                                </button>
+                                <p class="text-sm text-gray-500 mt-3">Pastikan semua data yang wajib diisi (*) telah terisi dengan benar</p>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Pengguna Aset Form -->
+                    <div id="pengguna-aset" class="sub-menu hidden">
+                        <div class="text-center mb-8">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg mb-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">Form Pengguna Aset</h3>
+                            <p class="text-gray-600 max-w-2xl mx-auto">Daftarkan pengguna aset dengan informasi lengkap untuk memudahkan tracking dan pengelolaan</p>
+                        </div>
+
+                        <form id="penggunaForm" class="space-y-8">
+                            <!-- Section 1: Informasi Aset -->
+                            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 shadow-sm">
+                                <div class="flex items-center mb-6">
+                                    <div class="bg-blue-500 p-2 rounded-lg mr-3">
+                                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-900">Informasi Aset</h4>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div class="relative">
+                                        <label for="namaBarangPengguna" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full mr-2">AST</span>
+                                            Nama Barang <span class="text-red-500 ml-1">*</span>
+                                        </label>
+                                        <select id="namaBarangPengguna" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-focus bg-white" required>
+                                            <option value="">Pilih Barang dari Rekap Aset</option>
+                                        </select>
+                                    </div>
+                                    <div class="relative">
+                                        <label for="kodeBarangPengguna" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-purple-100 text-purple-600 text-xs px-2 py-1 rounded-full mr-2">KOD</span>
+                                            Kode Barang
+                                        </label>
+                                        <input type="text" id="kodeBarangPengguna" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl bg-gray-50 font-mono text-gray-600" readonly>
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none mt-8">
+                                            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="relative">
+                                        <label for="jumlahPengguna" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-green-100 text-green-600 text-xs px-2 py-1 rounded-full mr-2">JML</span>
+                                            Jumlah <span class="text-red-500 ml-1">*</span>
+                                        </label>
+                                        <input type="number" id="jumlahPengguna" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-focus text-center text-lg font-bold" min="1" placeholder="1" required>
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none mt-8">
+                                            <span class="text-gray-400 text-sm">unit</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section 2: Data Pengguna -->
+                            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100 shadow-sm">
+                                <div class="flex items-center mb-6">
+                                    <div class="bg-green-500 p-2 rounded-lg mr-3">
+                                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-900">Data Pengguna</h4>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div class="relative">
+                                        <label for="namaPengguna" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full mr-2">NAM</span>
+                                            Nama Pengguna <span class="text-red-500 ml-1">*</span>
+                                        </label>
+                                        <input type="text" id="namaPengguna" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 input-focus" placeholder="Contoh: Budi Santoso" required>
+                                    </div>
+                                    <div class="relative">
+                                        <label for="nipPengguna" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-yellow-100 text-yellow-600 text-xs px-2 py-1 rounded-full mr-2">NIP</span>
+                                            NIP <span class="text-red-500 ml-1">*</span>
+                                        </label>
+                                        <input type="text" id="nipPengguna" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 input-focus font-mono" placeholder="Contoh: 198501012010011001" required>
+                                    </div>
+                                    <div class="relative">
+                                        <label for="jabatanPengguna" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-purple-100 text-purple-600 text-xs px-2 py-1 rounded-full mr-2">JAB</span>
+                                            Jabatan <span class="text-red-500 ml-1">*</span>
+                                        </label>
+                                        <input type="text" id="jabatanPengguna" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 input-focus" placeholder="Contoh: Staff Administrasi" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section 3: Informasi Penugasan -->
+                            <div class="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-100 shadow-sm">
+                                <div class="flex items-center mb-6">
+                                    <div class="bg-orange-500 p-2 rounded-lg mr-3">
+                                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zM4 7h12v9a1 1 0 01-1 1H5a1 1 0 01-1-1V7zM9 9a1 1 0 000 2v2a1 1 0 001 1h1a1 1 0 100-2v-2a1 1 0 00-1-1H9z"/>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-900">Informasi Penugasan</h4>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="relative">
+                                        <label for="tmtPenggunaan" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full mr-2">TMT</span>
+                                            TMT Penggunaan Aset <span class="text-red-500 ml-1">*</span>
+                                        </label>
+                                        <input type="date" id="tmtPenggunaan" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 input-focus" required>
+                                        <p class="text-xs text-gray-500 mt-1">Tanggal Mulai Tugas menggunakan aset ini</p>
+                                    </div>
+                                    <div class="relative">
+                                        <label for="lokasi" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                            <span class="bg-indigo-100 text-indigo-600 text-xs px-2 py-1 rounded-full mr-2">LOK</span>
+                                            Lokasi Penempatan <span class="text-red-500 ml-1">*</span>
+                                        </label>
+                                        <input type="text" id="lokasi" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 input-focus" placeholder="Contoh: Ruang Administrasi Lt. 2" required>
+                                        <p class="text-xs text-gray-500 mt-1">Lokasi dimana aset akan digunakan</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="text-center pt-6">
+                                <button type="submit" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-12 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                                    <span class="flex items-center justify-center">
+                                        <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                                        </svg>
+                                        Simpan Data Pengguna
+                                    </span>
+                                </button>
+                                <p class="text-sm text-gray-500 mt-3">Pastikan semua data yang wajib diisi (*) telah terisi dengan benar</p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rekap Aset -->
+            <div id="rekap" class="menu-content hidden">
+                <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4 lg:p-6 border border-white/20">
+                    <h2 class="text-lg lg:text-xl font-bold text-gray-900 mb-4">Rekap Data Aset</h2>
+                    <div class="table-container overflow-x-auto rounded-xl border border-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
+                                <tr>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">No</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jenis Barang</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Kode Barang</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">BAST</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Tgl BAST</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">SP2D</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Tgl SP2D</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Merk/Type</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Ukuran/CC</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Bahan</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Tahun</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama Pabrik</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">No. Rangka</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">No. Mesin</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">No. Polisi</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">No. BPKB</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Sumber</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jumlah</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Biaya Umum</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Harga Satuan</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Total Harga</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Kondisi</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Keterangan</th>
+                                    <th class="px-3 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rekapTable" class="bg-white divide-y divide-gray-200">
+                                <!-- Data akan diisi oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Laporan -->
+            <div id="laporan" class="menu-content hidden">
+                <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4 lg:p-6 border border-white/20">
+                    <h2 class="text-lg lg:text-xl font-bold text-gray-900 mb-4">Laporan Aset</h2>
+                    
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
+                            <div class="flex items-center">
+                                <div class="bg-blue-500 p-3 rounded-lg mr-3">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-blue-700">Total Jenis Aset</p>
+                                    <p class="text-2xl font-bold text-blue-900" id="totalJenisAset">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
+                            <div class="flex items-center">
+                                <div class="bg-green-500 p-3 rounded-lg mr-3">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-green-700">Total Barang</p>
+                                    <p class="text-2xl font-bold text-green-900" id="totalBarangSemua">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200">
+                            <div class="flex items-center">
+                                <div class="bg-purple-500 p-3 rounded-lg mr-3">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-purple-700">Total Nilai</p>
+                                    <p class="text-2xl font-bold text-purple-900" id="totalNilaiSemua">Rp 0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <button onclick="generateLaporan('semua')" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                            Laporan Semua Aset
+                        </button>
+                        <button onclick="generateLaporan('kondisi')" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                            Laporan per Kondisi
+                        </button>
+                        <button onclick="generateLaporan('pengguna')" class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-6 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                            Laporan Pengguna
+                        </button>
+                        <button onclick="generateLaporan('gudang')" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                            Status Barang di Gudang
+                        </button>
+                    </div>
+                    <div id="laporanContent" class="border-t pt-4">
+                        <p class="text-gray-500 text-center py-8">Pilih jenis laporan yang ingin ditampilkan</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kondisi Aset -->
+            <div id="kondisi" class="menu-content hidden">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Edit Kondisi Aset</h2>
+                    <form id="kondisiForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label for="searchKode" class="block text-sm font-medium text-gray-700 mb-1">Kode Aset atau Nomor Registrasi</label>
+                            <input type="text" id="searchKode" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Masukkan kode atau nomor registrasi">
+                        </div>
+                        <div>
+                            <button type="button" onclick="cariAset()" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 mt-6">
+                                Cari Aset
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="asetFound" class="hidden">
+                        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                            <h3 class="font-medium text-gray-900 mb-2">Data Aset Ditemukan:</h3>
+                            <div id="asetInfo" class="text-sm text-gray-600"></div>
+                        </div>
+                        
+                        <form id="updateKondisiForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="kondisiAset" class="block text-sm font-medium text-gray-700 mb-1">Kondisi Aset</label>
+                                <select id="kondisiAset" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                    <option value="">Pilih Kondisi</option>
+                                    <option value="Baik">Baik</option>
+                                    <option value="Rusak Ringan">Rusak Ringan</option>
+                                    <option value="Rusak Berat">Rusak Berat</option>
+                                    <option value="Hilang">Hilang</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="keterangan" class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
+                                <input type="text" id="keterangan" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Keterangan kondisi (opsional)">
+                            </div>
+                            <div class="md:col-span-2">
+                                <button type="submit" class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                                    Update Kondisi
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tracking Barang -->
+            <div id="tracking" class="menu-content hidden">
+                <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4 lg:p-6 border border-white/20">
+                    <h2 class="text-lg lg:text-xl font-bold text-gray-900 mb-4">Tracking Barang</h2>
+                    
+                    <!-- Search Bar -->
+                    <div class="mb-6">
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <div class="flex-1">
+                                <input type="text" id="trackingSearch" placeholder="Cari berdasarkan nama barang, kode, atau pengguna..." class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-focus">
+                            </div>
+                            <button onclick="searchTracking()" class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                                Cari
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Options -->
+                    <div class="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <select id="filterKondisi" onchange="filterTracking()" class="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Semua Kondisi</option>
+                            <option value="Baik">Baik</option>
+                            <option value="Rusak Ringan">Rusak Ringan</option>
+                            <option value="Rusak Berat">Rusak Berat</option>
+                            <option value="Hilang">Hilang</option>
+                        </select>
+                        <select id="filterTahun" onchange="filterTracking()" class="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Semua Tahun</option>
+                        </select>
+                        <button onclick="resetFilter()" class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                            Reset Filter
+                        </button>
+                    </div>
+
+                    <!-- Tracking Results -->
+                    <div id="trackingResults" class="space-y-4">
+                        <!-- Results will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden">
+        <div class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+            <span id="toastMessage"></span>
+        </div>
+    </div>
+
+    <script>
+        // Database simulation
+        let asetData = JSON.parse(localStorage.getItem('asetData')) || [];
+        let penggunaData = JSON.parse(localStorage.getItem('penggunaData')) || [];
+        let kondisiData = JSON.parse(localStorage.getItem('kondisiData')) || {};
+
+        // Login credentials
+        const validCredentials = [
+            { username: 'admin', password: 'admin123', role: 'Administrator' },
+            { username: 'pengelola', password: 'pengelola123', role: 'Pengelola' },
+            { username: 'user', password: 'user123', role: 'User' }
+        ];
+
+        // Check login status on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+        });
+
+        // Check if user is logged in
+        function checkLoginStatus() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            const currentUser = localStorage.getItem('currentUser');
+            
+            if (isLoggedIn === 'true' && currentUser) {
+                showApp();
+            } else {
+                showLogin();
+            }
+        }
+
+        // Access control functions
+        function getCurrentUser() {
+            const currentUser = localStorage.getItem('currentUser');
+            return currentUser ? JSON.parse(currentUser) : null;
+        }
+
+        function hasAccess(requiredRole) {
+            const user = getCurrentUser();
+            if (!user) return false;
+            
+            const roleHierarchy = {
+                'Administrator': 3,
+                'Pengelola': 2,
+                'User': 1
+            };
+            
+            const userLevel = roleHierarchy[user.role] || 0;
+            const requiredLevel = roleHierarchy[requiredRole] || 0;
+            
+            return userLevel >= requiredLevel;
+        }
+
+        function canBackupRestore() {
+            const user = getCurrentUser();
+            return user && user.role === 'Administrator';
+        }
+
+        function canAddAsset() {
+            const user = getCurrentUser();
+            return user && (user.role === 'Administrator' || user.role === 'Pengelola');
+        }
+
+        function canDeleteAsset() {
+            const user = getCurrentUser();
+            return user && user.role === 'Administrator';
+        }
+
+        // Show login screen
+        function showLogin() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('app').classList.add('hidden');
+        }
+
+        // Show main application
+        function showApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            
+            // Initialize app components
+            updateTime();
+            setInterval(updateTime, 1000);
+            updateDashboard();
+            updateRekapTable();
+            updatePenggunaSelect();
+            initializeTracking();
+            
+            // Apply access control
+            applyAccessControl();
+        }
+
+        // Apply access control based on user role
+        function applyAccessControl() {
+            const user = getCurrentUser();
+            if (!user) return;
+            
+            // Update user role display
+            const userRoleElement = document.getElementById('userRole');
+            if (userRoleElement) {
+                userRoleElement.textContent = user.role;
+            }
+            
+            // Control backup/restore buttons visibility
+            const backupBtn = document.getElementById('backupBtn');
+            const restoreBtn = document.getElementById('restoreBtn');
+            
+            if (canBackupRestore()) {
+                backupBtn.style.display = 'block';
+                restoreBtn.style.display = 'block';
+            } else {
+                backupBtn.style.display = 'none';
+                restoreBtn.style.display = 'none';
+            }
+            
+            // Control navigation access
+            const navDataAset = document.getElementById('navDataAset');
+            const mobileNavDataAset = document.getElementById('mobileNavDataAset');
+            const navKondisi = document.getElementById('navKondisi');
+            const mobileNavKondisi = document.getElementById('mobileNavKondisi');
+            
+            if (!canAddAsset()) {
+                // Hide Data Aset menu for users who can't add assets
+                if (navDataAset) navDataAset.style.display = 'none';
+                if (mobileNavDataAset) mobileNavDataAset.style.display = 'none';
+            }
+            
+            if (user.role === 'User') {
+                // Hide Kondisi Aset menu for regular users
+                if (navKondisi) navKondisi.style.display = 'none';
+                if (mobileNavKondisi) mobileNavKondisi.style.display = 'none';
+            }
+        }
+
+        // Login form handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    handleLogin();
+                });
+            }
+        });
+
+        // Handle login
+        function handleLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+            const errorMessage = document.getElementById('loginErrorMessage');
+
+            // Hide previous error
+            errorDiv.classList.add('hidden');
+
+            // Validate credentials
+            const user = validCredentials.find(cred => 
+                cred.username === username && cred.password === password
+            );
+
+            if (user) {
+                // Login successful
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
+                showToast(`Selamat datang, ${user.role}!`);
+                showApp();
+            } else {
+                // Login failed
+                errorMessage.textContent = 'Username atau password salah!';
+                errorDiv.classList.remove('hidden');
+                
+                // Clear password field
+                document.getElementById('password').value = '';
+                
+                // Shake animation for error
+                errorDiv.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => {
+                    errorDiv.style.animation = '';
+                }, 500);
+            }
+        }
+
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
+                `;
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                `;
+            }
+        }
+
+        // Logout function
+        function logout() {
+            // Create logout confirmation dialog
+            const dialog = document.createElement('div');
+            dialog.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+            dialog.innerHTML = `
+                <div class="fixed inset-0 bg-black bg-opacity-50" onclick="closeLogoutDialog()"></div>
+                <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative z-10 glass-effect border border-white/20">
+                    <div class="text-center">
+                        <div class="mx-auto flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mb-4">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Konfirmasi Logout</h3>
+                        <p class="text-sm text-gray-600 mb-6">Apakah Anda yakin ingin keluar dari sistem?</p>
+                        <div class="flex space-x-3">
+                            <button onclick="closeLogoutDialog()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-xl transition-all duration-300">
+                                Batal
+                            </button>
+                            <button onclick="confirmLogout()" class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold py-2 px-4 rounded-xl transition-all duration-300">
+                                Ya, Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(dialog);
+            dialog.id = 'logoutDialog';
+        }
+
+        function closeLogoutDialog() {
+            const dialog = document.getElementById('logoutDialog');
+            if (dialog) {
+                dialog.remove();
+            }
+        }
+
+        function confirmLogout() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('currentUser');
+            
+            closeLogoutDialog();
+            showToast('Anda telah berhasil logout');
+            
+            // Reset form
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+            
+            showLogin();
+        }
+
+        // Time update
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            const timeElement = document.getElementById('currentTime');
+            const mobileTimeElement = document.getElementById('currentTimeMobile');
+            
+            if (timeElement) timeElement.textContent = timeString;
+            if (mobileTimeElement) mobileTimeElement.textContent = timeString;
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuContent = mobileMenu.querySelector('.mobile-menu');
+            
+            if (mobileMenu.classList.contains('hidden')) {
+                mobileMenu.classList.remove('hidden');
+                setTimeout(() => {
+                    menuContent.classList.add('active');
+                }, 10);
+            } else {
+                menuContent.classList.remove('active');
+                setTimeout(() => {
+                    mobileMenu.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        // Navigation
+        function showMenu(menuId) {
+            // Hide all menus
+            document.querySelectorAll('.menu-content').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+            
+            // Show selected menu
+            document.getElementById(menuId).classList.remove('hidden');
+            document.getElementById(menuId).classList.add('fade-in');
+            
+            // Initialize tracking data when tracking menu is shown
+            if (menuId === 'tracking') {
+                initializeTracking();
+            }
+            
+            // Update desktop navigation buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = 'nav-btn bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 whitespace-nowrap';
+            });
+            
+            // Update mobile navigation buttons
+            document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+                btn.className = 'mobile-nav-btn w-full text-left px-6 py-4 rounded-xl bg-white border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-700 font-semibold transition-all duration-300';
+            });
+            
+            // Highlight active button based on menuId
+            const activeDesktopBtn = document.querySelector(`[onclick*="showMenu('${menuId}')"].nav-btn`);
+            const activeMobileBtn = document.querySelector(`[onclick*="showMenu('${menuId}')"].mobile-nav-btn`);
+            
+            if (activeDesktopBtn) {
+                activeDesktopBtn.className = 'nav-btn bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 whitespace-nowrap';
+            }
+            
+            if (activeMobileBtn) {
+                activeMobileBtn.className = 'mobile-nav-btn w-full text-left px-6 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-lg';
+            }
+        }
+
+        function showSubMenu(subMenuId) {
+            // Hide all sub menus
+            document.querySelectorAll('.sub-menu').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+            
+            // Show selected sub menu
+            document.getElementById(subMenuId).classList.remove('hidden');
+            
+            // Update sub navigation buttons
+            document.querySelectorAll('.sub-nav-btn').forEach(btn => {
+                btn.className = 'sub-nav-btn bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 px-6 lg:px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105';
+            });
+            
+            event.target.className = 'sub-nav-btn bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 lg:px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105';
+        }
+
+
+
+        // Auto-calculate total harga
+        function calculateTotal() {
+            const jumlah = parseInt(document.getElementById('jumlah').value) || 0;
+            const hargaSatuan = parseInt(document.getElementById('hargaSatuan').value) || 0;
+            const total = jumlah * hargaSatuan;
+            document.getElementById('totalHarga').value = total;
+        }
+
+        // Add event listeners for calculation
+        document.getElementById('jumlah').addEventListener('input', calculateTotal);
+        document.getElementById('hargaSatuan').addEventListener('input', calculateTotal);
+        
+        // Character counter for keterangan
+        document.getElementById('keterangan').addEventListener('input', function() {
+            const charCount = this.value.length;
+            const charCountElement = document.getElementById('charCount');
+            if (charCountElement) {
+                charCountElement.textContent = charCount;
+                if (charCount > 500) {
+                    charCountElement.parentElement.classList.add('text-red-500');
+                    charCountElement.parentElement.classList.remove('text-gray-400');
+                } else {
+                    charCountElement.parentElement.classList.remove('text-red-500');
+                    charCountElement.parentElement.classList.add('text-gray-400');
+                }
+            }
+        });
+
+        // Form submissions
+        document.getElementById('asetForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Check access permission
+            if (!canAddAsset()) {
+                showToast('Anda tidak memiliki akses untuk menambah aset!', 'error');
+                return;
+            }
+            
+            const formData = {
+                id: Date.now(),
+                jenisBarang: document.getElementById('jenisBarang').value,
+                kodeBarang: document.getElementById('kodeBarang').value,
+                bast: document.getElementById('bast').value,
+                tanggalBast: document.getElementById('tanggalBast').value,
+                sp2d: document.getElementById('sp2d').value,
+                tanggalSp2d: document.getElementById('tanggalSp2d').value,
+                merkType: document.getElementById('merkType').value,
+                ukuranCc: document.getElementById('ukuranCc').value,
+                bahan: document.getElementById('bahan').value,
+                tahunPembelian: document.getElementById('tahunPembelian').value,
+                namaPabrik: document.getElementById('namaPabrik').value,
+                nomorRangka: document.getElementById('nomorRangka').value,
+                nomorMesin: document.getElementById('nomorMesin').value,
+                nomorPolisi: document.getElementById('nomorPolisi').value,
+                nomorBpkb: document.getElementById('nomorBpkb').value,
+                sumberPerolehan: document.getElementById('sumberPerolehan').value,
+                jumlah: parseInt(document.getElementById('jumlah').value),
+                biayaUmum: parseInt(document.getElementById('biayaUmum').value) || 0,
+                hargaSatuan: parseInt(document.getElementById('hargaSatuan').value) || 0,
+                totalHarga: parseInt(document.getElementById('totalHarga').value) || 0,
+                keterangan: document.getElementById('keterangan').value,
+                tanggalInput: new Date().toISOString()
+            };
+            
+            asetData.push(formData);
+            localStorage.setItem('asetData', JSON.stringify(asetData));
+            kondisiData[formData.id] = 'Baik'; // Default kondisi
+            localStorage.setItem('kondisiData', JSON.stringify(kondisiData));
+            
+            showToast('Data aset berhasil disimpan!');
+            this.reset();
+            updateDashboard();
+            updateRekapTable();
+            updatePenggunaSelect();
+        });
+
+        document.getElementById('penggunaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Check access permission
+            if (!canAddAsset()) {
+                showToast('Anda tidak memiliki akses untuk menambah pengguna aset!', 'error');
+                return;
+            }
+            
+            const formData = {
+                id: Date.now(),
+                namaBarang: document.getElementById('namaBarangPengguna').value,
+                kodeBarang: document.getElementById('kodeBarangPengguna').value,
+                namaPengguna: document.getElementById('namaPengguna').value,
+                nipPengguna: document.getElementById('nipPengguna').value,
+                jabatanPengguna: document.getElementById('jabatanPengguna').value,
+                tmtPenggunaan: document.getElementById('tmtPenggunaan').value,
+                jumlah: parseInt(document.getElementById('jumlahPengguna').value),
+                lokasi: document.getElementById('lokasi').value,
+                tanggalInput: new Date().toISOString()
+            };
+            
+            penggunaData.push(formData);
+            localStorage.setItem('penggunaData', JSON.stringify(penggunaData));
+            
+            showToast('Data pengguna aset berhasil disimpan!');
+            this.reset();
+            updateDashboard();
+        });
+
+        document.getElementById('updateKondisiForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Check access permission
+            const user = getCurrentUser();
+            if (user && user.role === 'User') {
+                showToast('Anda tidak memiliki akses untuk mengubah kondisi aset!', 'error');
+                return;
+            }
+            
+            const searchValue = document.getElementById('searchKode').value;
+            const kondisi = document.getElementById('kondisiAset').value;
+            const keterangan = document.getElementById('keterangan').value;
+            
+            const aset = asetData.find(item => 
+                item.kodeBarang === searchValue || item.nomorRegistrasi === searchValue
+            );
+            
+            if (aset) {
+                kondisiData[aset.id] = kondisi;
+                if (keterangan) {
+                    kondisiData[aset.id + '_keterangan'] = keterangan;
+                }
+                localStorage.setItem('kondisiData', JSON.stringify(kondisiData));
+                
+                showToast('Kondisi aset berhasil diupdate!');
+                document.getElementById('asetFound').classList.add('hidden');
+                document.getElementById('searchKode').value = '';
+                updateDashboard();
+                updateRekapTable();
+            }
+        });
+
+        // Pengguna select update
+        function updatePenggunaSelect() {
+            const select = document.getElementById('namaBarangPengguna');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">Pilih Barang dari Rekap Aset</option>';
+            
+            asetData.forEach(aset => {
+                const option = document.createElement('option');
+                option.value = aset.jenisBarang;
+                option.textContent = `${aset.jenisBarang} - ${aset.kodeBarang} (${aset.merkType || 'Tanpa Merk'})`;
+                option.dataset.kode = aset.kodeBarang;
+                option.dataset.id = aset.id;
+                select.appendChild(option);
+            });
+        }
+
+        // Event listener untuk dropdown barang pengguna
+        document.addEventListener('DOMContentLoaded', function() {
+            const namaBarangSelect = document.getElementById('namaBarangPengguna');
+            if (namaBarangSelect) {
+                namaBarangSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const kodeBarangInput = document.getElementById('kodeBarangPengguna');
+                    
+                    if (kodeBarangInput) {
+                        kodeBarangInput.value = selectedOption.dataset.kode || '';
+                    }
+                });
+            }
+        });
+
+        // Search asset
+        function cariAset() {
+            const searchValue = document.getElementById('searchKode').value.trim();
+            if (!searchValue) {
+                showToast('Masukkan kode aset atau nomor registrasi!', 'error');
+                return;
+            }
+            
+            const aset = asetData.find(item => 
+                item.kodeBarang === searchValue || item.nomorRegistrasi === searchValue
+            );
+            
+            if (aset) {
+                document.getElementById('asetFound').classList.remove('hidden');
+                document.getElementById('asetInfo').innerHTML = `
+                    <p><strong>Nama:</strong> ${aset.namaBarang}</p>
+                    <p><strong>Kode:</strong> ${aset.kodeBarang}</p>
+                    <p><strong>No. Registrasi:</strong> ${aset.nomorRegistrasi}</p>
+                    <p><strong>Merk:</strong> ${aset.merk}</p>
+                    <p><strong>Kondisi Saat Ini:</strong> ${kondisiData[aset.id] || 'Belum diset'}</p>
+                `;
+                document.getElementById('kondisiAset').value = kondisiData[aset.id] || '';
+                document.getElementById('keterangan').value = kondisiData[aset.id + '_keterangan'] || '';
+            } else {
+                showToast('Aset tidak ditemukan!', 'error');
+                document.getElementById('asetFound').classList.add('hidden');
+            }
+        }
+
+        // Dashboard update
+        function updateDashboard() {
+            document.getElementById('totalAset').textContent = asetData.length;
+            
+            const asetBaik = Object.values(kondisiData).filter(kondisi => kondisi === 'Baik').length;
+            const asetRusak = Object.values(kondisiData).filter(kondisi => 
+                kondisi === 'Rusak Ringan' || kondisi === 'Rusak Berat'
+            ).length;
+            
+            document.getElementById('asetBaik').textContent = asetBaik;
+            document.getElementById('asetRusak').textContent = asetRusak;
+            document.getElementById('totalPengguna').textContent = penggunaData.length;
+            
+            // Update laporan summary cards
+            updateLaporanSummary();
+        }
+
+        // Update laporan summary
+        function updateLaporanSummary() {
+            const totalJenis = asetData.length;
+            const totalBarang = asetData.reduce((sum, aset) => sum + (aset.jumlah || 1), 0);
+            const totalNilai = asetData.reduce((sum, aset) => sum + (aset.totalHarga || aset.hargaSatuan || 0), 0);
+            
+            const totalJenisEl = document.getElementById('totalJenisAset');
+            const totalBarangEl = document.getElementById('totalBarangSemua');
+            const totalNilaiEl = document.getElementById('totalNilaiSemua');
+            
+            if (totalJenisEl) totalJenisEl.textContent = totalJenis;
+            if (totalBarangEl) totalBarangEl.textContent = totalBarang;
+            if (totalNilaiEl) totalNilaiEl.textContent = `Rp ${totalNilai.toLocaleString('id-ID')}`;
+        }
+
+        // Rekap table update
+        function updateRekapTable() {
+            const tbody = document.getElementById('rekapTable');
+            tbody.innerHTML = '';
+            
+            if (asetData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="24" class="px-3 lg:px-6 py-8 text-center text-sm text-gray-500">
+                        Belum ada data aset. Silakan tambahkan data aset terlebih dahulu.
+                    </td>
+                `;
+                tbody.appendChild(row);
+                return;
+            }
+            
+            asetData.forEach((aset, index) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors';
+                row.innerHTML = `
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900 text-center font-bold">${index + 1}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.jenisBarang || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900 font-mono">${aset.kodeBarang || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.bast || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.tanggalBast || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.sp2d || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.tanggalSp2d || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.merkType || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.ukuranCc || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.bahan || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.tahunPembelian || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.namaPabrik || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.nomorRangka || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.nomorMesin || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.nomorPolisi || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.nomorBpkb || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.sumberPerolehan || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900 text-center">${aset.jumlah || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">Rp ${aset.biayaUmum ? aset.biayaUmum.toLocaleString('id-ID') : '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">Rp ${aset.hargaSatuan ? aset.hargaSatuan.toLocaleString('id-ID') : '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900 font-semibold">Rp ${aset.totalHarga ? aset.totalHarga.toLocaleString('id-ID') : '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4">
+                        <span class="px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full ${getKondisiColor(kondisiData[aset.id])}">
+                            ${kondisiData[aset.id] || 'Belum diset'}
+                        </span>
+                    </td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-900">${aset.keterangan || '-'}</td>
+                    <td class="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm font-medium">
+                        ${canDeleteAsset() ? `
+                            <button onclick="deleteAset(${aset.id})" class="text-red-600 hover:text-red-900 transition-colors bg-red-50 hover:bg-red-100 px-2 py-1 rounded-lg">
+                                <span class="hidden sm:inline">Hapus</span>
+                                <span class="sm:hidden">🗑️</span>
+                            </button>
+                        ` : `
+                            <span class="text-gray-400 text-xs">Tidak ada akses</span>
+                        `}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getKondisiColor(kondisi) {
+            switch(kondisi) {
+                case 'Baik': return 'bg-green-100 text-green-800';
+                case 'Rusak Ringan': return 'bg-yellow-100 text-yellow-800';
+                case 'Rusak Berat': return 'bg-red-100 text-red-800';
+                case 'Hilang': return 'bg-gray-100 text-gray-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function deleteAset(id) {
+            // Check access permission
+            if (!canDeleteAsset()) {
+                showToast('Anda tidak memiliki akses untuk menghapus aset!', 'error');
+                return;
+            }
+            
+            if (confirm('Apakah Anda yakin ingin menghapus aset ini?')) {
+                asetData = asetData.filter(aset => aset.id !== id);
+                delete kondisiData[id];
+                delete kondisiData[id + '_keterangan'];
+                
+                localStorage.setItem('asetData', JSON.stringify(asetData));
+                localStorage.setItem('kondisiData', JSON.stringify(kondisiData));
+                
+                showToast('Aset berhasil dihapus!');
+                updateDashboard();
+                updateRekapTable();
+                updatePenggunaSelect();
+            }
+        }
+
+        // Reports
+        function generateLaporan(jenis) {
+            const content = document.getElementById('laporanContent');
+            let html = '';
+            
+            switch(jenis) {
+                case 'semua':
+                    let totalBarang = 0;
+                    let totalHarga = 0;
+                    let totalBiayaUmum = 0;
+                    
+                    html = `
+                        <h3 class="text-lg font-bold mb-4">Laporan Semua Aset</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <h4 class="font-medium text-blue-900">Total Jenis Aset</h4>
+                                <p class="text-2xl font-bold text-blue-600">${asetData.length}</p>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                                <h4 class="font-medium text-green-900">Total Barang</h4>
+                                <p class="text-2xl font-bold text-green-600" id="totalBarangLaporan">0</p>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                <h4 class="font-medium text-purple-900">Total Nilai</h4>
+                                <p class="text-2xl font-bold text-purple-600" id="totalHargaLaporan">Rp 0</p>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jenis Barang</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kode Barang</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">BAST</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tgl BAST</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SP2D</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tgl SP2D</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Merk/Type</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ukuran/CC</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bahan</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tahun</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Pabrik</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. Rangka</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. Mesin</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. Polisi</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. BPKB</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sumber</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jumlah</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Biaya Umum</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Harga Satuan</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Harga</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kondisi</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Keterangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                    `;
+                    asetData.forEach((aset, index) => {
+                        totalBarang += aset.jumlah || 1;
+                        totalHarga += aset.totalHarga || aset.hargaSatuan || 0;
+                        totalBiayaUmum += aset.biayaUmum || 0;
+                        html += `
+                            <tr>
+                                <td class="px-6 py-4 text-sm text-gray-900 text-center font-bold">${index + 1}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.jenisBarang || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 font-mono">${aset.kodeBarang || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.bast || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.tanggalBast || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.sp2d || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.tanggalSp2d || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.merkType || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.ukuranCc || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.bahan || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.tahunPembelian || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.namaPabrik || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.nomorRangka || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.nomorMesin || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.nomorPolisi || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.nomorBpkb || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.sumberPerolehan || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 text-center font-semibold">${aset.jumlah || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">Rp ${aset.biayaUmum ? aset.biayaUmum.toLocaleString('id-ID') : '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">Rp ${aset.hargaSatuan ? aset.hargaSatuan.toLocaleString('id-ID') : '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 font-semibold">Rp ${aset.totalHarga ? aset.totalHarga.toLocaleString('id-ID') : '-'}</td>
+                                <td class="px-6 py-4 text-sm">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full ${getKondisiColor(kondisiData[aset.id])}">
+                                        ${kondisiData[aset.id] || 'Belum diset'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${aset.keterangan || '-'}</td>
+                            </tr>
+                        `;
+                    });
+                    html += `
+                                </tbody>
+                                <tfoot class="bg-gray-100">
+                                    <tr>
+                                        <td colspan="17" class="px-6 py-4 text-sm font-bold text-gray-900 text-right">TOTAL:</td>
+                                        <td class="px-6 py-4 text-sm font-bold text-gray-900 text-center">${totalBarang}</td>
+                                        <td class="px-6 py-4 text-sm font-bold text-gray-900">Rp ${totalBiayaUmum.toLocaleString('id-ID')}</td>
+                                        <td class="px-6 py-4 text-sm font-bold text-gray-900">-</td>
+                                        <td class="px-6 py-4 text-sm font-bold text-gray-900">Rp ${totalHarga.toLocaleString('id-ID')}</td>
+                                        <td colspan="2" class="px-6 py-4 text-sm font-bold text-gray-900">-</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    `;
+                    
+                    // Update summary cards after rendering
+                    setTimeout(() => {
+                        const totalBarangEl = document.getElementById('totalBarangLaporan');
+                        const totalHargaEl = document.getElementById('totalHargaLaporan');
+                        if (totalBarangEl) totalBarangEl.textContent = totalBarang;
+                        if (totalHargaEl) totalHargaEl.textContent = `Rp ${totalHarga.toLocaleString('id-ID')}`;
+                    }, 100);
+                    break;
+                    
+                case 'kondisi':
+                    const kondisiStats = {};
+                    Object.values(kondisiData).forEach(kondisi => {
+                        if (kondisi && !kondisi.includes('_keterangan')) {
+                            kondisiStats[kondisi] = (kondisiStats[kondisi] || 0) + 1;
+                        }
+                    });
+                    
+                    html = `
+                        <h3 class="text-lg font-bold mb-4">Laporan per Kondisi Aset</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    `;
+                    Object.entries(kondisiStats).forEach(([kondisi, jumlah]) => {
+                        html += `
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-medium text-gray-900">${kondisi}</h4>
+                                <p class="text-2xl font-bold text-blue-600">${jumlah}</p>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    break;
+                    
+                case 'pengguna':
+                    html = `
+                        <h3 class="text-lg font-bold mb-4">Laporan Pengguna Aset</h3>
+                        <div class="mb-6 bg-blue-50 p-4 rounded-xl border border-blue-200">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                                </svg>
+                                <div>
+                                    <p class="text-blue-800 font-semibold">Total Pengguna Terdaftar: ${penggunaData.length} orang</p>
+                                    <p class="text-blue-700 text-sm">Total Aset yang Digunakan: ${penggunaData.reduce((sum, p) => sum + (p.jumlah || 0), 0)} unit</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Pengguna</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">NIP</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jabatan</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Barang</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kode Barang</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jumlah</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">TMT Penggunaan</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lokasi</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal Input</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                    `;
+                    penggunaData.forEach(pengguna => {
+                        html += `
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 text-sm font-medium text-gray-900">${pengguna.namaPengguna}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 font-mono">${pengguna.nipPengguna || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${pengguna.jabatanPengguna || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${pengguna.namaBarang}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 font-mono bg-gray-50">${pengguna.kodeBarang}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 text-center font-semibold">${pengguna.jumlah} unit</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${pengguna.tmtPenggunaan ? new Date(pengguna.tmtPenggunaan).toLocaleDateString('id-ID') : '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${pengguna.lokasi}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">${new Date(pengguna.tanggalInput).toLocaleDateString('id-ID')}</td>
+                            </tr>
+                        `;
+                    });
+                    html += `
+                                </tbody>
+                                <tfoot class="bg-gray-100">
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-4 text-sm font-bold text-gray-900 text-right">TOTAL:</td>
+                                        <td class="px-6 py-4 text-sm font-bold text-blue-900 text-center">${penggunaData.reduce((sum, p) => sum + (p.jumlah || 0), 0)} unit</td>
+                                        <td colspan="3" class="px-6 py-4 text-sm font-bold text-gray-900">-</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'gudang':
+                    // Calculate stock in warehouse
+                    const stockData = asetData.map(aset => {
+                        const totalAset = aset.jumlah || 1;
+                        const penggunaAset = penggunaData.filter(p => p.kodeBarang === aset.kodeBarang);
+                        const totalDigunakan = penggunaAset.reduce((sum, p) => sum + (p.jumlah || 0), 0);
+                        const sisaGudang = totalAset - totalDigunakan;
+                        
+                        return {
+                            ...aset,
+                            totalAset,
+                            totalDigunakan,
+                            sisaGudang,
+                            penggunaList: penggunaAset
+                        };
+                    });
+                    
+                    const totalStockGudang = stockData.reduce((sum, item) => sum + item.sisaGudang, 0);
+                    const totalItemDigunakan = stockData.reduce((sum, item) => sum + item.totalDigunakan, 0);
+                    const itemKosong = stockData.filter(item => item.sisaGudang <= 0).length;
+                    
+                    html = `
+                        <h3 class="text-lg font-bold mb-4">Status Barang di Gudang</h3>
+                        
+                        <!-- Summary Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
+                                <div class="flex items-center">
+                                    <div class="bg-green-500 p-3 rounded-lg mr-3">
+                                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-green-700">Total Stok Gudang</p>
+                                        <p class="text-2xl font-bold text-green-900">${totalStockGudang} unit</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
+                                <div class="flex items-center">
+                                    <div class="bg-blue-500 p-3 rounded-lg mr-3">
+                                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-blue-700">Sedang Digunakan</p>
+                                        <p class="text-2xl font-bold text-blue-900">${totalItemDigunakan} unit</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-xl border border-red-200">
+                                <div class="flex items-center">
+                                    <div class="bg-red-500 p-3 rounded-lg mr-3">
+                                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-red-700">Stok Habis</p>
+                                        <p class="text-2xl font-bold text-red-900">${itemKosong} item</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jenis Barang</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kode</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Merk/Type</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Aset</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sedang Digunakan</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sisa di Gudang</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Detail Pengguna</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                    `;
+                    
+                    stockData.forEach((item, index) => {
+                        const statusClass = item.sisaGudang <= 0 ? 'bg-red-100 text-red-800' : 
+                                          item.sisaGudang <= 2 ? 'bg-yellow-100 text-yellow-800' : 
+                                          'bg-green-100 text-green-800';
+                        const statusText = item.sisaGudang <= 0 ? 'Habis' : 
+                                         item.sisaGudang <= 2 ? 'Terbatas' : 
+                                         'Tersedia';
+                        
+                        html += `
+                            <tr class="${item.sisaGudang <= 0 ? 'bg-red-50' : ''}">
+                                <td class="px-6 py-4 text-sm text-gray-900 text-center font-semibold">${index + 1}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${item.jenisBarang || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 font-mono">${item.kodeBarang}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${item.merkType || '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 text-center font-semibold">${item.totalAset}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 text-center ${item.totalDigunakan > 0 ? 'text-blue-600 font-semibold' : ''}">${item.totalDigunakan}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 text-center font-bold ${item.sisaGudang <= 0 ? 'text-red-600' : item.sisaGudang <= 2 ? 'text-yellow-600' : 'text-green-600'}">${item.sisaGudang}</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full ${statusClass}">
+                                        ${statusText}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm">
+                                    ${item.penggunaList.length > 0 ? `
+                                        <div class="space-y-1">
+                                            ${item.penggunaList.map(p => `
+                                                <div class="text-xs bg-blue-50 px-2 py-1 rounded border">
+                                                    <strong>${p.namaPengguna}</strong> (${p.jumlah} unit)<br>
+                                                    <span class="text-gray-600">${p.lokasi}</span>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : '<span class="text-gray-400 text-xs">Tidak ada pengguna</span>'}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                </tbody>
+                                <tfoot class="bg-gray-100">
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-4 text-sm font-bold text-gray-900 text-right">TOTAL:</td>
+                                        <td class="px-6 py-4 text-sm font-bold text-gray-900 text-center">${stockData.reduce((sum, item) => sum + item.totalAset, 0)}</td>
+                                        <td class="px-6 py-4 text-sm font-bold text-blue-900 text-center">${totalItemDigunakan}</td>
+                                        <td class="px-6 py-4 text-sm font-bold text-green-900 text-center">${totalStockGudang}</td>
+                                        <td colspan="2" class="px-6 py-4 text-sm font-bold text-gray-900">-</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        
+                        ${itemKosong > 0 ? `
+                            <div class="mt-6 bg-red-50 border border-red-200 rounded-xl p-4">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-red-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <div>
+                                        <h4 class="text-red-800 font-semibold">Peringatan Stok</h4>
+                                        <p class="text-red-700 text-sm mt-1">
+                                            Terdapat ${itemKosong} item yang stoknya habis di gudang. Segera lakukan pengadaan atau kembalikan barang yang sedang digunakan.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+                    `;
+                    break;
+            }
+            
+            content.innerHTML = html;
+        }
+
+        // Backup and restore
+        function backupData() {
+            // Check access permission
+            if (!canBackupRestore()) {
+                showToast('Anda tidak memiliki akses untuk backup data!', 'error');
+                return;
+            }
+            showBackupDialog();
+        }
+
+        function showBackupDialog() {
+            // Create backup dialog
+            const dialog = document.createElement('div');
+            dialog.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+            dialog.innerHTML = `
+                <div class="fixed inset-0 bg-black bg-opacity-50" onclick="closeBackupDialog()"></div>
+                <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md relative z-10 glass-effect border border-white/20">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                            💾 Backup Data Aset
+                        </h3>
+                        <button onclick="closeBackupDialog()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <p class="text-gray-600 mb-4">Pilih lokasi penyimpanan untuk file backup:</p>
+                        
+                        <div class="space-y-3">
+                            <button onclick="downloadBackup()" class="w-full flex items-center justify-between p-4 border-2 border-blue-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 group">
+                                <div class="flex items-center">
+                                    <div class="bg-blue-100 p-2 rounded-lg mr-3 group-hover:bg-blue-200 transition-colors">
+                                        <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <h4 class="font-semibold text-gray-900">Download ke Perangkat</h4>
+                                        <p class="text-sm text-gray-600">Simpan file backup ke folder Download</p>
+                                    </div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                            
+                            <button onclick="copyToClipboard()" class="w-full flex items-center justify-between p-4 border-2 border-purple-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-all duration-300 group">
+                                <div class="flex items-center">
+                                    <div class="bg-purple-100 p-2 rounded-lg mr-3 group-hover:bg-purple-200 transition-colors">
+                                        <svg class="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
+                                            <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <h4 class="font-semibold text-gray-900">Salin ke Clipboard</h4>
+                                        <p class="text-sm text-gray-600">Salin data backup untuk disimpan manual</p>
+                                    </div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-400 group-hover:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                            
+                            <button onclick="shareBackup()" class="w-full flex items-center justify-between p-4 border-2 border-green-200 rounded-xl hover:border-green-400 hover:bg-green-50 transition-all duration-300 group">
+                                <div class="flex items-center">
+                                    <div class="bg-green-100 p-2 rounded-lg mr-3 group-hover:bg-green-200 transition-colors">
+                                        <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <h4 class="font-semibold text-gray-900">Bagikan File</h4>
+                                        <p class="text-sm text-gray-600">Kirim backup melalui aplikasi lain</p>
+                                    </div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <div class="text-sm">
+                                <p class="text-blue-800 font-medium mb-1">Informasi Backup</p>
+                                <p class="text-blue-700">
+                                    • Total Aset: <span class="font-semibold">${asetData.length}</span><br>
+                                    • Total Pengguna: <span class="font-semibold">${penggunaData.length}</span><br>
+                                    • Ukuran File: <span class="font-semibold">~${Math.round(JSON.stringify({asetData, penggunaData, kondisiData}).length / 1024)} KB</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(dialog);
+            dialog.id = 'backupDialog';
+        }
+
+        function closeBackupDialog() {
+            const dialog = document.getElementById('backupDialog');
+            if (dialog) {
+                dialog.remove();
+            }
+        }
+
+        function downloadBackup() {
+            const backupData = {
+                asetData: asetData,
+                penggunaData: penggunaData,
+                kondisiData: kondisiData,
+                timestamp: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `backup-aset-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            closeBackupDialog();
+            showToast('✅ File backup berhasil diunduh ke perangkat Anda!');
+        }
+
+        function copyToClipboard() {
+            const backupData = {
+                asetData: asetData,
+                penggunaData: penggunaData,
+                kondisiData: kondisiData,
+                timestamp: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const dataStr = JSON.stringify(backupData, null, 2);
+            
+            navigator.clipboard.writeText(dataStr).then(() => {
+                closeBackupDialog();
+                showToast('📋 Data backup berhasil disalin ke clipboard!');
+            }).catch(() => {
+                // Fallback untuk browser yang tidak mendukung clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = dataStr;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                closeBackupDialog();
+                showToast('📋 Data backup berhasil disalin ke clipboard!');
+            });
+        }
+
+        function shareBackup() {
+            const backupData = {
+                asetData: asetData,
+                penggunaData: penggunaData,
+                kondisiData: kondisiData,
+                timestamp: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const file = new File([dataBlob], `backup-aset-${new Date().toISOString().split('T')[0]}.json`, {type: 'application/json'});
+            
+            if (navigator.share && navigator.canShare && navigator.canShare({files: [file]})) {
+                navigator.share({
+                    title: 'Backup Data Aset',
+                    text: 'File backup data manajemen aset',
+                    files: [file]
+                }).then(() => {
+                    closeBackupDialog();
+                    showToast('📤 File backup berhasil dibagikan!');
+                }).catch(() => {
+                    // Fallback ke download jika share gagal
+                    downloadBackup();
+                });
+            } else {
+                // Fallback untuk browser yang tidak mendukung Web Share API
+                downloadBackup();
+                showToast('📱 Fitur berbagi tidak didukung, file diunduh sebagai gantinya.');
+            }
+        }
+
+        function restoreData() {
+            // Check access permission
+            if (!canBackupRestore()) {
+                showToast('Anda tidak memiliki akses untuk restore data!', 'error');
+                return;
+            }
+            
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const backupData = JSON.parse(e.target.result);
+                            
+                            if (backupData.asetData && backupData.penggunaData && backupData.kondisiData) {
+                                asetData = backupData.asetData;
+                                penggunaData = backupData.penggunaData;
+                                kondisiData = backupData.kondisiData;
+                                
+                                localStorage.setItem('asetData', JSON.stringify(asetData));
+                                localStorage.setItem('penggunaData', JSON.stringify(penggunaData));
+                                localStorage.setItem('kondisiData', JSON.stringify(kondisiData));
+                                
+                                updateDashboard();
+                                updateRekapTable();
+                                updatePenggunaSelect();
+                                
+                                showToast('Data berhasil dipulihkan dari backup!');
+                            } else {
+                                showToast('Format file backup tidak valid!', 'error');
+                            }
+                        } catch (error) {
+                            showToast('Error membaca file backup!', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        // Tracking functions
+        function initializeTracking() {
+            loadTrackingData();
+            populateYearFilter();
+        }
+
+        function loadTrackingData() {
+            const trackingResults = document.getElementById('trackingResults');
+            if (!trackingResults) return;
+            
+            if (asetData.length === 0) {
+                trackingResults.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="text-gray-400 mb-4">
+                            <svg class="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Belum Ada Data Aset</h3>
+                        <p class="text-gray-600">Silakan tambahkan data aset terlebih dahulu untuk menggunakan fitur tracking.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            displayTrackingResults(asetData);
+        }
+
+        function displayTrackingResults(data) {
+            const trackingResults = document.getElementById('trackingResults');
+            if (!trackingResults) return;
+            
+            trackingResults.innerHTML = '';
+            
+            data.forEach(aset => {
+                const pengguna = penggunaData.filter(p => p.kodeBarang === aset.kodeBarang);
+                const kondisi = kondisiData[aset.id] || 'Belum diset';
+                const keterangan = kondisiData[aset.id + '_keterangan'] || '';
+                
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden card-hover';
+                card.innerHTML = `
+                    <div class="p-6">
+                        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-900 mb-1">${aset.jenisBarang || 'Tidak ada nama'}</h3>
+                                        <p class="text-sm text-gray-600 font-mono bg-gray-100 px-2 py-1 rounded inline-block">${aset.kodeBarang}</p>
+                                    </div>
+                                    <span class="px-3 py-1 inline-flex text-xs leading-4 font-semibold rounded-full ${getKondisiColor(kondisi)}">
+                                        ${kondisi}
+                                    </span>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                    <div>
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Merk/Type</p>
+                                        <p class="text-sm font-medium text-gray-900">${aset.merkType || '-'}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Tahun Pembelian</p>
+                                        <p class="text-sm font-medium text-gray-900">${aset.tahunPembelian || '-'}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Jumlah</p>
+                                        <p class="text-sm font-medium text-gray-900">${aset.jumlah || 1} unit</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Harga Satuan</p>
+                                        <p class="text-sm font-medium text-gray-900">Rp ${(aset.hargaSatuan || 0).toLocaleString('id-ID')}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Total Harga</p>
+                                        <p class="text-sm font-medium text-gray-900">Rp ${(aset.totalHarga || aset.hargaSatuan || 0).toLocaleString('id-ID')}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Sumber Perolehan</p>
+                                        <p class="text-sm font-medium text-gray-900">${aset.sumberPerolehan || '-'}</p>
+                                    </div>
+                                </div>
+                                
+                                ${keterangan ? `
+                                    <div class="mb-4">
+                                        <p class="text-xs text-gray-500 uppercase tracking-wide">Keterangan Kondisi</p>
+                                        <p class="text-sm text-gray-700 bg-yellow-50 px-3 py-2 rounded-lg border border-yellow-200">${keterangan}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="border-t pt-4 mt-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-sm font-semibold text-gray-900 flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                                    </svg>
+                                    Pengguna Aset (${pengguna.length})
+                                </h4>
+                                ${pengguna.length > 0 ? `
+                                    <span class="text-xs text-gray-500">
+                                        Total digunakan: ${pengguna.reduce((sum, p) => sum + (p.jumlah || 0), 0)} unit
+                                    </span>
+                                ` : ''}
+                            </div>
+                            
+                            ${pengguna.length > 0 ? `
+                                <div class="space-y-2">
+                                    ${pengguna.map(p => `
+                                        <div class="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200">
+                                            <div class="flex items-start justify-between">
+                                                <div class="flex items-start">
+                                                    <div class="bg-blue-100 p-2 rounded-full mr-3 mt-1">
+                                                        <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div class="flex-1">
+                                                        <p class="text-sm font-semibold text-gray-900">${p.namaPengguna}</p>
+                                                        ${p.nipPengguna ? `<p class="text-xs text-gray-600 font-mono">NIP: ${p.nipPengguna}</p>` : ''}
+                                                        ${p.jabatanPengguna ? `<p class="text-xs text-gray-600">Jabatan: ${p.jabatanPengguna}</p>` : ''}
+                                                        <p class="text-xs text-gray-600 mt-1">📍 ${p.lokasi}</p>
+                                                        ${p.tmtPenggunaan ? `<p class="text-xs text-gray-500">TMT: ${new Date(p.tmtPenggunaan).toLocaleDateString('id-ID')}</p>` : ''}
+                                                    </div>
+                                                </div>
+                                                <div class="text-right">
+                                                    <p class="text-sm font-bold text-blue-600">${p.jumlah || 0} unit</p>
+                                                    <p class="text-xs text-gray-500">Input: ${new Date(p.tanggalInput).toLocaleDateString('id-ID')}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : `
+                                <div class="text-center py-4">
+                                    <div class="text-gray-400 mb-2">
+                                        <svg class="w-8 h-8 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm text-gray-500">Belum ada pengguna untuk aset ini</p>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+                
+                trackingResults.appendChild(card);
+            });
+        }
+
+        function populateYearFilter() {
+            const filterTahun = document.getElementById('filterTahun');
+            if (!filterTahun) return;
+            
+            const years = [...new Set(asetData.map(aset => aset.tahunPembelian).filter(year => year))].sort((a, b) => b - a);
+            
+            filterTahun.innerHTML = '<option value="">Semua Tahun</option>';
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                filterTahun.appendChild(option);
+            });
+        }
+
+        function searchTracking() {
+            const searchTerm = document.getElementById('trackingSearch').value.toLowerCase().trim();
+            
+            if (!searchTerm) {
+                loadTrackingData();
+                return;
+            }
+            
+            const filteredData = asetData.filter(aset => {
+                const matchesAset = 
+                    (aset.jenisBarang && aset.jenisBarang.toLowerCase().includes(searchTerm)) ||
+                    (aset.kodeBarang && aset.kodeBarang.toLowerCase().includes(searchTerm)) ||
+                    (aset.merkType && aset.merkType.toLowerCase().includes(searchTerm));
+                
+                const matchesPengguna = penggunaData.some(pengguna => 
+                    pengguna.kodeBarang === aset.kodeBarang && 
+                    pengguna.namaPengguna.toLowerCase().includes(searchTerm)
+                );
+                
+                return matchesAset || matchesPengguna;
+            });
+            
+            displayTrackingResults(filteredData);
+            
+            if (filteredData.length === 0) {
+                document.getElementById('trackingResults').innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="text-gray-400 mb-4">
+                            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Tidak Ada Hasil</h3>
+                        <p class="text-gray-600">Tidak ditemukan aset atau pengguna yang sesuai dengan pencarian "${searchTerm}"</p>
+                    </div>
+                `;
+            }
+        }
+
+        function filterTracking() {
+            const kondisiFilter = document.getElementById('filterKondisi').value;
+            const tahunFilter = document.getElementById('filterTahun').value;
+            
+            let filteredData = asetData;
+            
+            if (kondisiFilter) {
+                filteredData = filteredData.filter(aset => kondisiData[aset.id] === kondisiFilter);
+            }
+            
+            if (tahunFilter) {
+                filteredData = filteredData.filter(aset => aset.tahunPembelian == tahunFilter);
+            }
+            
+            displayTrackingResults(filteredData);
+        }
+
+        function resetFilter() {
+            document.getElementById('trackingSearch').value = '';
+            document.getElementById('filterKondisi').value = '';
+            document.getElementById('filterTahun').value = '';
+            loadTrackingData();
+        }
+
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            
+            if (type === 'error') {
+                toast.querySelector('div').className = 'bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg';
+            } else {
+                toast.querySelector('div').className = 'bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg';
+            }
+            
+            toast.classList.remove('hidden');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99486c5ca1b85f5c',t:'MTc2MTQ2NTY2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
